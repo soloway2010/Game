@@ -1,0 +1,16 @@
+#version 330 core
+layout(location = 0) in vec2 vertexPosition_modelspace;
+layout(location = 1) in vec2 vertexUV;
+
+out vec2 UV;
+
+void main(){
+
+	vec2 shift = vertexPosition_modelspace - vec2(512, 384);
+
+	vec2 scale = shift/vec2(512, 384);
+
+	gl_Position = vec4(scale, 0, 1);
+
+	UV = vertexUV;
+}
