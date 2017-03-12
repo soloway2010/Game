@@ -30,6 +30,7 @@ int main(int argc, char* argv[]){
 				case 0x00FF00: fprintf(file1, "0 "); fprintf(file2, "%d %d 2\n", j, i); ents++; break;
 				case 0x0000FF: fprintf(file1, "0 "); fprintf(file3, "%d %d\n", j, i); chests++; break;
 				case 0x00FFFF: fprintf(file1, "0 "); fprintf(file2, "%d %d 4\n", j, i); ents++; break;
+				case 0xFF00FF: fprintf(file1, "0 "); fprintf(file2, "%d %d 7\n", j, i); ents++; break;
 				case 0xFFFFFF: fprintf(file1, "0 "); break;
 			}
 		}
