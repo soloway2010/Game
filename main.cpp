@@ -30,9 +30,9 @@ const int FOVY = 24;
 const int FOVE = 8;
 const int FOVT = 20;
 
-const int INTERFACE = 9;
-const int FILLIN = 10;
-const int INVENTORY = 11;
+const int INTERFACE = 12;
+const int FILLIN = 13;
+const int INVENTORY = 14;
 
 #define ANSI_COLOR_RED     "//R"
 #define ANSI_COLOR_GREEN   "//G"
@@ -220,6 +220,9 @@ public:
 		textures.push_back(loadBMP("textures/projectile.bmp"));
 		textures.push_back(loadBMP("textures/sayan.bmp"));
 		textures.push_back(loadBMP("textures/explosion.bmp"));
+		textures.push_back(loadBMP("textures/generator.bmp"));
+		textures.push_back(loadBMP("textures/laser1.bmp"));
+		textures.push_back(loadBMP("textures/laser2.bmp"));
 		textures.push_back(loadBMP("textures/interface.bmp"));
 		textures.push_back(loadBMP("textures/fillin.bmp"));
 		textures.push_back(loadBMP("textures/inventory.bmp"));
@@ -936,6 +939,7 @@ public:
 		node<Chest*> *tmp;
 		while(list){
 			tmp = list->next;
+			delete list->value;
 			delete list;
 			list = tmp;
 		}
@@ -1001,6 +1005,7 @@ public:
 		while(list->next){
 			tmp = list;
 			list = list->next;
+			delete [] tmp->value;
 			delete tmp;
 		}
 	}
@@ -1016,6 +1021,7 @@ public:
 			node<char*> *tmp;
 			tmp = list;
 			list = list->next;
+			delete [] tmp->value;
 			delete tmp;
 			n--;
 		}
@@ -1247,6 +1253,18 @@ public:
 	void doTurn(Map &map, Entities &ents, ListOfChests &chests);
 };
 
+class Laser: public Enemy{
+public:
+	std::vector<int> laser;
+	bool dir;
+
+	Laser(int x, int y, int d):Enemy(x, y, 10, 100, 10, 9){
+		dir = d;
+	}
+
+	void doTurn(Map &map, Entities &ents, ListOfChests &chests);
+};
+
 class Turret: public Enemy{
 	int reload;
 public:
@@ -1286,6 +1304,7 @@ public:
 		node<Creature*> *tmp;
 		while(list){
 			tmp = list->next;
+			delete list->value;
 			delete list;
 			list = tmp;
 		}
@@ -1304,6 +1323,7 @@ public:
 		node<Creature*> *tmp1 = list, *tmp2;
 		if(list->value->getId() == id){
 			tmp1 = tmp1->next;
+			delete list->value;
 			delete list;
 			list = tmp1;
 		}else{
@@ -1312,6 +1332,7 @@ public:
 				tmp1 = tmp1->next;
 			}
 			tmp2->next = tmp1->next;
+			delete tmp1->value;
 			delete tmp1;
 		}
 		tmp1 = list;
@@ -1402,12 +1423,26 @@ public:
 			}
 
 		while(tmp->next){
+			if(tmp->value->getType() == 2){
+				tmp = tmp->next;
+				continue;
+			}
+			
+			if(tmp->value->getType() == 9){
+				Laser *tmpL = (Laser*) tmp->value;
+				for(int i = 0; i < tmpL->laser.size(); i += 2)
+					if(abs(x - tmpL->laser[i]) < FOVX/2 && abs(y - tmpL->laser[i+1]) < FOVY/2)
+						drawer.drawXY(tmpL->dir?10:11, tmpL->laser[i] - x, tmpL->laser[i+1] - y);
+			}
+
 			int tmpX = tmp->value->getX();
 			int tmpY = tmp->value->getY();
 			if(abs(x - tmpX) < FOVX/2 && abs(y - tmpY) < FOVY/2)
 				drawer.drawXY(tmp->value->getType(), tmpX - x, tmpY - y);
 			tmp = tmp->next;
 		}
+
+		drawer.drawXY(2, 0, 0);
 	}
 
 	void synchChests(ListOfChests &list){
@@ -1435,6 +1470,13 @@ int main(void){
 	Entities ents;
 
 	Player &player = ents.formFromFile("maps/layer2");
+
+	Laser *laser = new Laser(9, 13, 1);
+	laser->laser.push_back(9);
+	laser->laser.push_back(15);
+	laser->laser.push_back(10);
+	laser->laser.push_back(15);
+	ents.addEnt(laser);
 
 	names.setPool("rand/randNames");
 
@@ -2021,6 +2063,14 @@ void Sayan::doTurn(Map &map, Entities &ents, ListOfChests &chests){
 		attack(map, ents, X, Y);
 	else if(X - x && !move(sign(X-x), 0, map, ents));
 	else if(Y - y && !move(0, sign(Y-y), map, ents));				
+}
+
+void Laser::doTurn(Map &map, Entities &ents, ListOfChests &chests){
+	Creature *tmp;
+
+	for(int i = 0; i < laser.size(); i += 2)
+		if(tmp = ents.findByXY(laser[i], laser[i+1]))
+			tmp->getHurt(baseDmg, ents, map);
 }
 
 void Turret::doTurn(Map &map, Entities &ents, ListOfChests &chests){

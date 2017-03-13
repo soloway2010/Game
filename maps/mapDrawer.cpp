@@ -32,6 +32,15 @@ int main(int argc, char* argv[]){
 				case 0x00FFFF: fprintf(file1, "0 "); fprintf(file2, "%d %d 4\n", j, i); ents++; break;
 				case 0xFF00FF: fprintf(file1, "0 "); fprintf(file2, "%d %d 7\n", j, i); ents++; break;
 				case 0xFFFFFF: fprintf(file1, "0 "); break;
+				default: if(color >= 0xFF0078 && color <= 0xFF0082){
+						 	 fprintf(file1, "0 "); 
+						 	 fprintf(file2, "%d %d %d\n", j, i, img.get_pixel(j, i).blue + 9);
+						 	 ents++;
+						 }else if(color >= 0xFFFF78 && color <= 0xFFFF82){
+						 	 fprintf(file1, "0 "); 
+						 	 fprintf(file2, "%d %d %d\n", j, i, img.get_pixel(j, i).blue + 10);
+						 	 ents++;
+						 }
 			}
 		}
 		fprintf(file1, "\n");
